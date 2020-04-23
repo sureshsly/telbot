@@ -172,7 +172,7 @@ def covid19india(update, context):
 
 def main():
     _initStateCodes('statecodes.json')
-    updater = Updater(token='1113259481:AAH0IUi78bV2qaNkrfGUaaZem3jadB8rVFQ', use_context=True)
+    updater = Updater(token='1113259481:', use_context=True)
 
     updater.dispatcher.add_handler(CommandHandler('start', start))
     updater.dispatcher.add_handler(CommandHandler('help', help))
