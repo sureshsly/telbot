@@ -172,6 +172,7 @@ def covid19india(update, context):
 
 
 def main():
+     print('Code Testing')
     _initStateCodes('statecodes.json')
     updater = Updater(token=Token, use_context=True)
 
@@ -187,4 +188,4 @@ def main():
 
 if __name__ == '__main__':
     main()
-    print('Code Testing')
+
