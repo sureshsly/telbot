@@ -7,9 +7,10 @@ import json
 import operator
 from telegram.ext import Updater, CommandHandler
 from telegram import ParseMode
-
+import os
 # Bot details
 
+Token = os.environ['Token']
 
 webPageLink = 'https://www.covid19india.org'
 
@@ -172,7 +173,7 @@ def covid19india(update, context):
 
 def main():
     _initStateCodes('statecodes.json')
-    updater = Updater(token='1113259481:', use_context=True)
+    updater = Updater(token=Token, use_context=True)
 
     updater.dispatcher.add_handler(CommandHandler('start', start))
     updater.dispatcher.add_handler(CommandHandler('help', help))
