@@ -1,11 +1,9 @@
-""" A Telegram bot to retrieve stats from the covid19india.org site """
+""" A Telegram bot to retrieve stats from the covid19india.org site  Codes are customised for my personal use"""
 from sys import version_info
-# if version_info.major > 2:
-#     raise Exception('This code does not work with Python 3. Use Python 2')
 import requests
 import json
 import operator
-from telegram.ext import Updater, CommandHandler
+from telegram.ext import Updater, Filters, MessageHandler
 from telegram import ParseMode
 import os
 # Bot details
@@ -99,20 +97,21 @@ def _getMessageNational():
 def _getMessageStatewise(stateName):
     data = _getSiteData(statewise=True)
     chars = 8
+    totalConfirmed = 0
     for stateDict in data:
         if stateName == stateDict['state']:
             message = webPageLink + '\n' +  \
                 'District'.ljust(14,' ') + '|Total Confirmed'.ljust(14,' ') + '\n'
             for district in stateDict['districtData']:
+                totalConfirmed = totalConfirmed + int(district['confirmed'])
                 districtName = district['district']
                 confirmed = str(district['confirmed']).ljust(chars, ' ')
                 delta = str(district['delta']['confirmed']).ljust(chars, ' ')
                 message = message + districtName[0:10].ljust(14, '.') \
                     + '|' + confirmed + '\n'
             break
-    message = '```' +  message + '```'
+    message =str(stateName)+' Total Cases : '+ str(totalConfirmed)+'\n' +'```' +  message + '```'
     return message
-
 
 def _initStateCodes(filename):
     global _stateNameCodeDict
@@ -124,16 +123,6 @@ def start(update, context):
     """ start command """
 
     message = 'Use /help for a list of commands.'
-    context.bot.send_message(chat_id=update.effective_chat.id, text=message)
-
-
-def help(update, context):
-    """ help command """
-
-    message = "/India - Displays stats of all states\n" + \
-              "/India <statecodes> - Displays stats of a <state>\n" + \
-              "/statecodes - Displays codes of states that can be used as <state>\n" + \
-              "/Overview - Displays stats of India \n"
     context.bot.send_message(chat_id=update.effective_chat.id, text=message)
 
 
@@ -153,34 +142,31 @@ def statecodes(update, context):
                              disable_web_page_preview=True)
 
 
-def covid19india(update, context):
+def state(update,context):
     """ Main command that retrieves and sends data """
-    # Check for arguments
-    stateName = "".join(context.args).strip().upper()
-    if len(stateName) > 1:  # State data requested
+    user_data = update.message.text.upper()
+
+    if user_data != 'INDIA':
         try:
-            stateName = _stateNameCodeDict[stateName]
+            stateName = _stateNameCodeDict[user_data]
             message = _getMessageStatewise(stateName)
         except KeyError:
-            message = 'Invalid state name. Use /statecodes to display codes.'
-    else:  # National data requested
+            message = "Please enter INDIA or any two digit state codes \n For Exmple /SATATECODES...."
+    else:
         message = _getMessageNational()
-
+        
     context.bot.send_message(chat_id=update.effective_chat.id, text=message,
-                             parse_mode=ParseMode.MARKDOWN,
-                             disable_web_page_preview=True)
+                                 parse_mode=ParseMode.MARKDOWN,
+                                 disable_web_page_preview=True)
+
 
 
 def main():
     print('Code Testing')
     _initStateCodes('statecodes.json')
     updater = Updater(token=Token, use_context=True)
-
-    updater.dispatcher.add_handler(CommandHandler('start', start))
-    updater.dispatcher.add_handler(CommandHandler('help', help))
-    updater.dispatcher.add_handler(CommandHandler('India', covid19india))
-    updater.dispatcher.add_handler(CommandHandler('statecodes', statecodes))
-
+    updater.dispatcher.add_handler(MessageHandler(Filters.command, statecodes))
+    updater.dispatcher.add_handler(MessageHandler(Filters.text, state, pass_user_data=True) )
 
     updater.start_polling()
     updater.idle()
